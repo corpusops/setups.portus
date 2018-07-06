@@ -1,0 +1,239 @@
+---
+version: "2"
+services:
+  nginx:
+    restart: unless-stopped
+    image: "{{cops_portus_nginx_img}}"
+    volumes:
+    - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./nginx/custom:/etc/nginx/custom:ro
+    - "{{cops_portus_certs_data}}:/secrets:ro"
+    - static:/srv/Portus/public:ro
+    ports:
+    - "{{cops_portus_nginx_http_port }}:80"
+    - "{{cops_portus_nginx_https_port}}:443"
+    links: ["registry:registry", "portus:portus"]
+  portus:
+    restart: unless-stopped
+    image: "{{cops_portus_portus_img}}"
+    # entrypoint: sh -c "while true;do sleep 65432;done"
+    environment:
+    - "PORTUS_LOG_LEVEL={{cops_portus_portus_log_level}}"
+    # SSL
+    - "PORTUS_CHECK_SSL_USAGE_ENABLED=false"
+    - "PORTUS_PUMA_TLS_CERT=/certificates/{{cops_portus_ssl_cert_path   |copsf_basename}}"
+    - "PORTUS_PUMA_TLS_KEY=/certificates/{{cops_portus_ssl_cert_key_path|copsf_basename}}"
+    - "PORTUS_KEY_PATH=/certificates/{{cops_portus_ssl_cert_key_path    |copsf_basename}}"
+    #
+    - PORTUS_MACHINE_FQDN_VALUE={{cops_portus_hostname}}
+    - CCONFIG_PREFIX=PORTUS
+    - PORTUS_DB_HOST=db
+    - "PORTUS_DB_DATABASE={{cops_portus_db_name}}"
+    - PORTUS_DB_PASSWORD={{cops_portus_db_password}}
+    - PORTUS_DB_POOL=5
+    # Secrets. It can possibly be handled better with Swarm's secrets.
+    - PORTUS_SECRET_KEY_BASE={{cops_portus_secret_key_base}}
+    - PORTUS_PASSWORD={{cops_portus_admin_password}}
+    # Since we have no nginx in insecure mode, portus have to
+    # serve the static files
+    - RAILS_SERVE_STATIC_FILES=true
+    {% for i in cops_portus_extra_conf %}
+    - {{i }}
+    {% endfor %}
+    ports:
+    - "{{cops_portus_port}}:3000"
+    depends_on: [db]
+    links: [db]
+    volumes:
+    - "{{cops_portus_certs_data}}:/certificates:ro"
+    - static:/srv/Portus/public
+  background:
+    restart: unless-stopped
+    image: "{{cops_portus_portus_img}}"
+    depends_on: [portus, db]
+    # entrypoint: sh -c "while true;do sleep 65432;done"
+    environment:
+    - "PORTUS_LOG_LEVEL={{cops_portus_portus_log_level}}"
+    # SSL
+    - "PORTUS_CHECK_SSL_USAGE_ENABLED=false"
+    - "PORTUS_PUMA_TLS_CERT=/certificates/{{cops_portus_ssl_cert_path   |copsf_basename}}"
+    - "PORTUS_PUMA_TLS_KEY=/certificates/{{cops_portus_ssl_cert_key_path|copsf_basename}}"
+    - "PORTUS_KEY_PATH=/certificates/{{cops_portus_ssl_cert_key_path    |copsf_basename}}"
+    # Theoretically not needed, but cconfig's been buggy on this...
+    - CCONFIG_PREFIX=PORTUS
+    - PORTUS_MACHINE_FQDN_VALUE={{cops_portus_hostname}}
+    # DB. The password for the database should definitely not be here. You are
+    # probably better off with Docker Swarm secrets.
+    - PORTUS_DB_HOST=db
+    - "PORTUS_DB_DATABASE={{cops_portus_db_name}}"
+    - PORTUS_DB_PASSWORD={{cops_portus_db_password}}
+    - PORTUS_DB_POOL=5
+    # Secrets. It can possibly be handled better with Swarm's secrets.
+    - PORTUS_SECRET_KEY_BASE={{cops_portus_secret_key_base}}
+    - PORTUS_PASSWORD={{cops_portus_admin_password}}
+    - PORTUS_BACKGROUND=true
+    - PORTUS_BACKGROUND_SYNC_STRATEGY={{cops_portus_background_sync_strategy}}
+    {% for i in cops_portus_extra_conf %}
+    - {{i }}
+    {% endfor %}
+    links: [db]
+    volumes:
+    - {{cops_portus_certs_data}}:/certificates:ro
+  db:
+    restart: unless-stopped
+    image: "{{cops_portus_mysql_img}}"
+    command: >
+      mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+      --init-connect='SET NAMES UTF8;' --innodb-flush-log-at-trx-commit=0
+    environment:
+    - "MYSQL_DATABASE={{cops_portus_db_name}}"
+    # Again, the password shouldn't be handled like this.
+    - "MYSQL_ROOT_PASSWORD={{cops_portus_db_password}}"
+    volumes:
+    - "{{cops_portus_mysql_data}}:/var/lib/mysql"
+  registry:
+    restart: unless-stopped
+    image: "{{cops_portus_registry_img}}"
+    environment:
+    # Authentication
+    - "REGISTRY_LOG_LEVEL={{cops_portus_registry_log_level}}"
+    - "REGISTRY_AUTH_TOKEN_REALM=https://{{cops_portus_hostname}}:{{cops_portus_nginx_force_ssl and cops_portus_nginx_https_port or cops_portus_nginx_http_port}}/v2/token"
+    - "REGISTRY_AUTH_TOKEN_SERVICE={{cops_portus_registry_auth_token_service}}"
+    - "REGISTRY_AUTH_TOKEN_ISSUER={{ cops_portus_hostname}}"
+    #- "REGISTRY_AUTH_TOKEN_ISSUER={{ cops_portus_hostname}}:{{cops_portus_nginx_force_ssl and cops_portus_nginx_https_port or cops_portus_nginx_http_port}}"
+    - "REGISTRY_HTTP_TLS_CERTIFICATE=/secrets/{{cops_portus_ssl_cert_path     |copsf_basename}}"
+    - "REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/secrets/{{cops_portus_ssl_cert_path|copsf_basename}}"
+    - "REGISTRY_HTTP_TLS_KEY=/secrets/{{cops_portus_ssl_cert_key_path|copsf_basename}}"
+    - "REGISTRY_HTTP_SECRET={{cops_portus_registry_secret}}"
+    # Portus endpoint
+    - |-
+      REGISTRY_LOG_HOOKS=
+      - type: mail
+        disabled: {{cops_portus_registry_mail_disabled}}
+        levels: {{cops_portus_registry_error_log_levels|to_json}}
+        options:
+          smtp:
+            addr: "{{cops_portus_email_server}}:{{cops_portus_email_server_port}}"
+            username: "{{cops_portus_email_username}}"
+            password: "{{cops_portus_email_password}}"
+            insecure: {{cops_portus_email_insecure}}
+          from: "{{cops_portus_email_from}}"
+          to: {{cops_portus_email_error_email|to_json}}
+    - |-
+      REGISTRY_NOTIFICATIONS_ENDPOINTS=
+      - name: portus
+        url: "https://portus:3000/v2/webhooks/events"
+        timeout: 2000ms
+        threshold: 5
+        backoff: 1s
+    - "REGISTRY_STORAGE_DELETE_ENABLED={{cops_portus_registry_storage_delete_enabled}}"
+    - "REGISTRY_REDIS_ADDR=redisregistry:6379"
+    - "REGISTRY_REDIS_PASSWORD={{cops_portus_redis_password}}"
+    - "REGISTRY_STORAGE_CACHE_BLOBDESCRIPTOR=redis"
+    volumes:
+      - {{cops_portus_registry_data}}:/var/lib/registry
+      - {{cops_portus_certs_data}}:/secrets:ro
+      - ./registry/config.yml:/etc/docker/registry/config.yml:ro
+    ports:
+      - "{{cops_portus_registry_port}}:5000"
+      # required to access debug service
+      - "{{cops_portus_registry_port+1}}:5001"
+    links: ["portus:portus", "redisregistry:redisregistry"]
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        set -ex;
+        cp -fv $$REGISTRY_HTTP_TLS_CERTIFICATE /usr/local/share/ca-certificates
+        && update-ca-certificates
+        && /entrypoint.sh /etc/docker/registry/config.yml
+    depends_on: [redisregistry]
+  redisregistry:
+    image: "{{cops_portus_redis_img}}"
+    restart: unless-stopped
+    command: >
+      --requirepass "{{cops_portus_redis_password}}"
+  clair:
+    image: "{{cops_portus_clair_img}}"
+    restart: unless-stopped
+    depends_on: [postgres]
+    links: [postgres]
+    ports: ["{{cops_portus_clair_port}}:6060-6061"]
+    volumes:
+    - /tmp:/tmp
+    - ./clair/clair.yml:/clair.yml
+    command: [-config, /clair.yml]
+  postgres:
+    restart: unless-stopped
+    image: "{{cops_portus_postgresql_img}}"
+    environment: {POSTGRES_PASSWORD: "{{cops_portus_pg_password}}"}
+    volumes:
+    - "{{cops_portus_postgresql_data}}:/var/lib/postgresql"
+  dbsmartbackup:
+    restart: unless-stopped
+    image: "corpusops/dbsmartbackup"
+    tmpfs: [/run, /run/lock]
+    volumes:
+    - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    - "/srv/docker/portus/local/data/backups:/srv/backups"
+    depends_on: [postgres, db]
+    links: [postgres, db]
+    environment:
+    - |
+      A_RECONFIGURE=---
+      only_steps: true
+      cops_dbsmartbackup_lifecycle_app_push_code: false
+      cops_dbsmartbackup_s_docker_reconfigure: true
+      cops_dbsmartbackup_s_first_fixperms: true
+      cops_dbsmartbackup_s_setup: true
+      cops_dbsmartbackup_s_manage_content: false
+      cops_dbsmartbackup_confs:
+        pg:
+           conf_path: /srv/backups/pg.conf
+           keep_lasts: 1
+           type: postgresql
+           keep_days: 2
+           keep_logs: 7
+           _periodicity: "0 3 * * *"
+           free_form: |
+             export HOST="postgres"
+             export DBNAMES="all"
+             export DBUSER="postgres"
+             export PGUSER="$$DBUSER"
+             export PASSWORD="{{cops_portus_pg_password}}"
+             export PGPASSWORD="$$PASSWORD"
+             export RUNAS="$$(whoami)"
+        mysql:
+          conf_path: /srv/backups/mysql.conf
+          keep_lasts: 1
+          type: mysql
+          keep_days: 2
+          keep_logs: 7
+          _periodicity: "0 3 * * *"
+          free_form: |
+            export HOST="db"
+            export PORT="3306"
+            export MYSQL_PORT="$$PORT"
+            export DBNAMES="all"
+            export PASSWORD="{{cops_portus_db_password}}"
+            export DBUSER="root"
+            export RUNAS="$$(whoami)"
+    - |
+      A_POSTCONFIGURE=---
+      only_steps: true
+      cops_dbsmartbackup_lifecycle_app_push_code: false
+      cops_dbsmartbackup_s_manage_content: true
+  # sidekar to ruse local + bind driver
+  # to have persistence on docker named volumes
+  # volumecreator:
+  #   entrypoint: sh -c "while true;do sleep 45678;done"
+  #   image: "ubuntu"
+  #   volumes:
+  #   - "{{cops_portus_statics_data}}:/v1"
+volumes:
+  static: {driver: local}
+  pgsock: {driver: local}
+    # driver_opts:
+    #    type: none
+    #    device: "{{cops_portus_statics_data}}"
+    #    o: bind

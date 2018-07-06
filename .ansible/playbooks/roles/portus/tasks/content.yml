@@ -1,0 +1,30 @@
+---
+- name: wait for admin user creation
+  register: _c_user
+  retries: 20
+  delay: 1
+  until: _c_user.rc == 0
+  shell: |-
+    set -ex
+    cd "{{cops_portus_ct}}"
+    ret=$(echo "select 'user1' from  users  where id=1;"\
+    | docker-compose -f docker-compose.cops.yml -p {{cops_portus_composename}}\
+    exec -T db sh -c \
+    'mysql -NBu root --password="$MYSQL_ROOT_PASSWORD" {{cops_portus_db_name}}')
+    [ "x$ret" = xuser1 ]
+  no_log: "{{not (cops_secret_vars_debug|default(false))}}"
+- assert:
+    msg: set admin mail
+    that: ["{{cops_portus_admin_mail|copsf_asbool}}"]
+- name: wait for admin user creation
+  no_log: "{{not (cops_secret_vars_debug|default(false))}}"
+  shell: |-
+    set -ex
+    cd "{{cops_portus_ct}}"
+    docker-compose -f docker-compose.cops.yml -p {{cops_portus_composename}}\
+    exec -T portus \
+    portusctl exec rails r '
+     User.where(id=1).first.unlock_access!
+     User.where(id=1).first.update!(
+       email: "{{cops_portus_admin_mail}}",
+       password: Rails.application.secrets.portus_password)'

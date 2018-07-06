@@ -1,0 +1,31 @@
+---
+- package: {name: [virtualenv]}
+- file: {state: directory, mode: "0751", path: "{{item}}"}
+  with_items:
+  - "{{cops_portus_dir}}"
+  - "{{cops_portus_t}}/nginx/custom"
+  - "{{cops_portus_d}}"
+  - "{{cops_portus_data}}"
+  - "{{cops_portus_dir}}/local/backup"
+  - "{{cops_portus_certs_data}}"
+  - "{{cops_portus_mysql_data}}"
+  - "{{cops_portus_statics_data}}"
+  - "{{cops_portus_registry_data}}"
+  - "{{cops_portus_postgresql_data}}"
+- shell: |-
+    d="{{cops_portus_d}}"
+    gargs=$(if [ "x$(git config user.email)" = "x" ];then echo "-c user.name=Corpusops -c user.email=autocommiter@corpousops";fi; )
+    if [ -e "$d/.git" ];then
+      cd "$d" && if ! ( git diff --quiet );then git $gargs stash && echo stashed >&2;fi
+    fi
+  register: _c_stashed
+  changed_when: "'stashed' in _c_stashed.stderr"
+- name: Checkout
+  git:
+    accept_hostkey: yes
+    repo: "{{cops_portus_url}}"
+    dest: "{{cops_portus_d}}"
+    version: "{{cops_portus_version}}"
+    recursive: true
+    update: true
+    force: true

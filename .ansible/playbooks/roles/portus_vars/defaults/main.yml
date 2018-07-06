@@ -1,0 +1,114 @@
+---
+cops_portus_version: "4d9be53"
+cops_portus_portus_img: "opensuse/portus:head"
+cops_portus_registry_img: "library/registry:2.6"
+cops_portus_db_name: portus_production
+cops_portus_admin_mail: null
+cops_portus_db_password: "secret70a0VpwK66n54KB"
+cops_portus_clair_password: "secret52zB5RWT30v2f7y"
+cops_portus_pg_password: "{{cops_portus_db_password}}"
+cops_portus_redis_password: "{{cops_portus_db_password}}"
+cops_portus_registry_auth_token_service: "registry:5000"
+cops_portus_hostname: "{{ansible_fqdn}}"
+cops_portus_admin_password: 05GB25q55r4I26G
+cops_portus_email_identity: ""
+cops_portus_email_server: "smtp.mydomain.com"
+cops_portus_email_server_port: "25"
+cops_portus_email_username: "sample_admin@mydomain.com"
+cops_portus_email_error_email: ["sysadmin+registryerror@foo.com"]
+cops_portus_email_password: "abc"
+cops_portus_email_from: "admin <sample_admin@mydomain.com>"
+cops_portus_email_ssl: "false"
+# openssl rand -hex 64
+cops_portus_secret_key_base: ab42ce064bb3fcb33d83343406ec6f8cab3104c58f8fc40d91f73d3f21db896a08cb8fab4367cba87a4c08844ecdbd261421c78234d0a1b4e06e5d028b67bd96
+cops_portus_extra_conf:
+- PORTUS_SIGNUP_ENABLED=false
+# always turn on local login
+- "PORTUS_OAUTH_LOCAL_LOGIN_ENABLED=true"
+# MAIL
+- "PORTUS_EMAIL_REPLY_TO="
+- "PORTUS_EMAIL_FROM=sysadmin+portus@makina-corpus.com"
+- "PORTUS_EMAIL_NAME=portus"
+- "PORTUS_EMAIL_SMTP_ENABLED=true"
+- "PORTUS_EMAIL_SMTP_ADDRESS={{cops_portus_email_server}}"
+- "PORTUS_EMAIL_SMTP_PORT={{cops_portus_email_server_port}}"
+- "PORTUS_EMAIL_SMTP_USER_NAME={{cops_portus_email_username}}"
+- "PORTUS_EMAIL_SMTP_PASSWORD={{cops_portus_email_password}}"
+# LDAP
+#- PORTUS_LDAP_ENABLED=true
+#- PORTUS_LDAP_HOSTNAME=ldap
+#- PORTUS_LDAP_PORT=389
+#- PORTUS_LDAP_UID=uid
+#- PORTUS_LDAP_BASE=dc=example,dc=org
+#- PORTUS_LDAP_FILTER=
+#- PORTUS_LDAP_AUTHENTICATION_ENABLED=true
+#- PORTUS_LDAP_AUTHENTICATION_BIND_DN=cn=admin,dc=example,dc=org
+#- PORTUS_LDAP_AUTHENTICATION_PASSWORD=admin
+#- PORTUS_LDAP_ENCRYPTION_METHOD=start_tls
+#- PORTUS_LDAP_ENCRYPTION_OPTIONS_CA_FILE=/ldap-certificates/ca.pem
+#- PORTUS_LDAP_ENCRYPTION_OPTIONS_SSL_VERSION=TLSv1_2 
+cops_portus_background_sync_strategy: update
+cops_portus_composename: portus
+cops_portus_donotlog_options_requests: true
+cops_portus_nginx_force_ssl: true
+cops_portus_nginx_ssl_terminated_before: true
+cops_portus_nginx_log_level: error
+cops_portus_nginx_http_port: 80
+cops_portus_portus_log_level: info
+cops_portus_registry_log_level: error
+cops_portus_nginx_https_port: 443
+cops_portus_clair_port: "6060-6061"
+cops_portus_port: 3000
+cops_portus_registry_port: 5000
+cops_portus_url: "https://github.com/SUSE/Portus.git"
+cops_portus_redis_img: "library/redis:4"
+cops_portus_clair_img: "quay.io/coreos/clair:v2.0.1"
+cops_portus_mysql_img: "library/mariadb:10.0.23"
+cops_portus_postgresql_img: "library/postgres:10-alpine"
+cops_portus_nginx_img: "library/nginx:alpine"
+cops_portus_dir: "/srv/docker/portus"
+cops_portus_d: "{{cops_portus_dir}}/releases/{{cops_portus_version}}"
+cops_portus_t: "{{cops_portus_d}}/examples/compose"
+cops_portus_c: "{{cops_portus_dir}}/current"
+cops_portus_ct: "{{cops_portus_c}}/examples/compose"
+cops_portus_sshargs: >-
+  {% set k = hostvars[inventory_hostname].get(
+                'ansible_ssh_private_key_file', '') %}
+  {% if k%}-o IdentityFile={{k}} -o IdentitiesOnly=yes{%endif%}
+  {% if (
+      hostvars[inventory_hostname].ansible_connection|default('ssh')
+     ) not in [ 'smart', 'local'] %}
+  {{ hostvars[inventory_hostname].ssh_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_common_args | default('') }}
+  {{ hostvars[inventory_hostname].ansible_ssh_extra_args | default('') }}
+  {% endif %}
+cops_portus_statics_data: "{{cops_portus_data}}/static"
+cops_portus_certs_data: "{{cops_portus_data}}/certs"
+cops_portus_mysql_data: "{{cops_portus_data}}/mysql"
+cops_portus_registry_data: "{{cops_portus_data}}/registry"
+cops_portus_postgresql_data: "{{cops_portus_data}}/postgresql"
+cops_portus_data: "{{cops_portus_dir}}/local/data"
+cops_portus_clair_db: "clair"
+# selfsigned ssl cert will have those CNAMEs
+cops_portus_cert_cns: ["{{[cops_portus_cert_cn]+cops_portus_cert_internal_cns}}"]
+cops_portus_cert_internal_cns: ["portus", "registry"]
+cops_portus_registry_mail_insecure: "false"
+cops_portus_registry_mail_disabled: "true"
+cops_portus_registry_error_log_levels: [panic]
+cops_portus_registry_storage_delete_enabled: "true"
+cops_portus_email_insecure: "false"
+cops_portus_ssl_cert_basename: "portus"
+cops_portus_ssl_cert_path:     "{{cops_portus_certs_data}}/{{cops_portus_ssl_cert_basename}}.bundle.pem"
+cops_portus_ssl_cert_key_path: "{{cops_portus_certs_data}}/{{cops_portus_ssl_cert_basename}}.key"
+cops_portus_ssl_cert: null
+cops_portus_ssl_force: false
+cops_portus_ssl_cert_key: null
+# cops_portus_ssl_cert: |-
+#   -----BEGIN CERTIFICATE-----
+#   -----END CERTIFICATE-----
+# cops_portus_ssl_cert_key: |-
+#   -----BEGIN RSA PRIVATE KEY-----
+#   -----END RSA PRIVATE KEY-----
+cops_portus_registry_secret: 625e1b6da4c373ead10afc129decbc2fea24a228762ff6ba5a3b391204c41915
+#

@@ -1,0 +1,21 @@
+---
+- include_tasks: checkout.yml
+  tags: ["portus_checkout"]
+  when: ["portus_checkout|default(true)"]
+- include_tasks: configure.yml
+  tags: ["portus_configure"]
+  when: ["portus_configure|defaul(true)"]
+- include_tasks: services.yml
+  tags: ["portus_services"]
+  when: ["portus_services|default(true)"]
+- include_tasks: content.yml
+  tags: ["portus_content"]
+  when: ["portus_content|default(true)"]
+#  delegate_to: "localhost"
+#  synchronize:
+#    compress: false
+#    ssh_args: "{{cops_portus_sshargs}}"
+#    src: "../../../../../"
+#    dest: "{{cops_portus_dir}}/"
+#    rsync_opts: ["-azv", "--exclude", ".ansible", "--exclude", "local"]
+#    #update_opts: '--recursive'

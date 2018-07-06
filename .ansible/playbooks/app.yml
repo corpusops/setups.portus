@@ -1,0 +1,12 @@
+---
+# APP
+- hosts: "{{portus_servers|default('all')}}"
+  roles: [corpusops.roles/ansible_plugins]
+  tasks:
+  - when: ["cops_portus_lifecycle_app|default(true)"]
+    tags: ["cops_portus_lifecycle_app"]
+    include_role: {name: portus_vars, allow_duplicates: false}
+  - when: ["cops_portus_lifecycle_app"]
+    tags: ["cops_portus_lifecycle_app"]
+    block:
+    - include_role: {name: portus,    allow_duplicates: false}

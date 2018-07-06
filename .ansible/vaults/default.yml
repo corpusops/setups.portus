@@ -1,0 +1,4 @@
+---
+cops_portus_defaultvar: test2
+portus_servers: portus_servers
+# vim:set ft=sls:

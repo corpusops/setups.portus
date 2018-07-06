@@ -1,0 +1,77 @@
+---
+
+- when: "cops_portus_ssl_cert and cops_portus_ssl_cert_key"
+  block:
+  - file:
+      state: directory
+      mode: "0710"
+      path: "{{item}}"
+    with_items:
+    - "{{cops_portus_ssl_cert_path    |copsf_dirname}}"
+    - "{{cops_portus_ssl_cert_key_path|copsf_dirname}}"
+  - copy:
+      force: true
+      src: "{{cops_portus_ssl_cert}}"
+      path: "{{cops_portus_ssl_cert_path}}"
+      mode: "0640"
+    no_log: true
+  - copy:
+      force: true
+      src: "{{cops_portus_ssl_cert_key}}"
+      path: "{{cops_portus_ssl_cert_key_path}}"
+      mode: "0640"
+- when:
+  - "ssl_certificate|default(true)"
+  - "not (cops_portus_ssl_cert and cops_portus_ssl_cert_key)"
+  tags: [ssl_certificate]
+  block:
+  - set_fact:
+      cacheable: false
+      _ssl_ca_signed_cert:
+        cn: "{{cops_portus_cert_cns[0]}}"
+        cns: "{{cops_portus_cert_cns}}"
+        basename: "{{cops_portus_ssl_cert_basename}}"
+        prefix: "{{cops_portus_ssl_cert_path|copsf_dirname}}"
+        force: "{{cops_portus_ssl_force}}"
+  - include_role: {private: true, name: corpusops.roles/ssl_ca_signed_cert}
+- template:
+    src: "{{item}}"
+    dest: "{{cops_portus_t}}/{{item}}"
+    mode: "0644"
+    trim_blocks: false
+  with_items:
+  - "docker-compose.cops.yml"
+  - "nginx/custom/server.conf"
+  - "nginx/custom/http.conf"
+- blockinfile:
+    path: "{{cops_portus_t}}/nginx/nginx.conf"
+    insertafter: "{{item}} {"
+    block:  "include custom/{{item}}.conf;"
+    marker: "# {mark} ANSIBLE {{item}} MANAGED BLOCK"
+  with_items: [http, server]
+- blockinfile:
+    path: "{{cops_portus_t}}/nginx/nginx.conf"
+    insertafter: "location / {"
+    marker: "# {mark} ANSIBLE -OPTIONS- MANAGED BLOCK"
+    block: |-
+      set $test "$request_method$request_uri";
+      if ( "$test" ~ "OPTIONS/" ) {
+        add_header Content-Length 0;
+        add_header Content-Type text/plain;
+        return 200;
+      }
+- shell: |-
+    set -ex
+    cd "{{cops_portus_t}}"
+    sed -i -r\
+     {% if cops_portus_nginx_ssl_terminated_before-%}-e "s/443.*/80;/g"{%endif%}\
+     {% if cops_portus_nginx_ssl_terminated_before-%}-e "s/(ssl on;)/ssl off;/g"{%endif%}\
+     -e "s/X-Forwarded-Proto \\\$scheme/X-Forwarded-Proto \$forwarded_ssl_scheme/g"\
+     -e "s/X-Scheme \\\$scheme/X-Scheme \$forwarded_ssl_scheme/g" \
+     -e "s|(ssl_certificate) .*|\\1 /secrets/{{cops_portus_ssl_cert_path    |copsf_basename}};|g" \
+     -e "s|(ssl_certificate_key) .*|\\1 /secrets/{{cops_portus_ssl_cert_key_path|copsf_basename}};|g" \
+    nginx/nginx.conf
+    sed -i -r\
+     -e "s/password=portus/password={{cops_portus_pg_password}}/g" \
+     clair/clair.yml
+  changed_when: false
