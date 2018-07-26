@@ -10,3 +10,4 @@
       working_directory: "{{cops_portus_ct}}"
       docker_compose_file: "docker-compose.cops.yml"
       state: restarted
+      down_volumes: true
