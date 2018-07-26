@@ -1,7 +1,12 @@
 ---
+- shell: |
+    set -ex
+    cd "{{cops_portus_ct}}"
+    docker-compose -f docker-compose.cops.yml -p portus pull
 - include_role: {name: corpusops.roles/docker_compose_service}
   vars:
     _docker_compose_service:
       project: "{{cops_portus_composename}}"
       working_directory: "{{cops_portus_ct}}"
       docker_compose_file: "docker-compose.cops.yml"
+      state: restarted

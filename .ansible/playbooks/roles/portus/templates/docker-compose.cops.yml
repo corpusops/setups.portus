@@ -43,8 +43,10 @@ services:
     ports:
     - "{{cops_portus_port}}:3000"
     depends_on: [db]
-    links: [db]
+    links: ["db:db"]
     volumes:
+    - "./../../app:/srv/Portus/app" 
+    - "./../../lib:/srv/Portus/lib" 
     - "{{cops_portus_certs_data}}:/certificates:ro"
     - static:/srv/Portus/public
   background:
@@ -79,6 +81,8 @@ services:
     links: [db]
     volumes:
     - {{cops_portus_certs_data}}:/certificates:ro
+    - "./../../app:/srv/Portus/app" 
+    - "./../../lib:/srv/Portus/lib" 
   db:
     restart: unless-stopped
     image: "{{cops_portus_mysql_img}}"

@@ -1,5 +1,8 @@
 ---
-
+- file:
+    state: link
+    src: "{{cops_portus_d}}"
+    path: "{{cops_portus_c}}"
 - when: "cops_portus_ssl_cert and cops_portus_ssl_cert_key"
   block:
   - file:

@@ -1,5 +1,6 @@
 ---
-cops_portus_version: "4d9be53"
+# cops_portus_version: "5f4caa2"
+cops_portus_version: "master"
 cops_portus_portus_img: "opensuse/portus:head"
 cops_portus_registry_img: "library/registry:2.6"
 cops_portus_db_name: portus_production
@@ -46,7 +47,7 @@ cops_portus_extra_conf:
 #- PORTUS_LDAP_AUTHENTICATION_PASSWORD=admin
 #- PORTUS_LDAP_ENCRYPTION_METHOD=start_tls
 #- PORTUS_LDAP_ENCRYPTION_OPTIONS_CA_FILE=/ldap-certificates/ca.pem
-#- PORTUS_LDAP_ENCRYPTION_OPTIONS_SSL_VERSION=TLSv1_2 
+#- PORTUS_LDAP_ENCRYPTION_OPTIONS_SSL_VERSION=TLSv1_2
 cops_portus_background_sync_strategy: update
 cops_portus_composename: portus
 cops_portus_donotlog_options_requests: true
@@ -60,7 +61,8 @@ cops_portus_nginx_https_port: 443
 cops_portus_clair_port: "6060-6061"
 cops_portus_port: 3000
 cops_portus_registry_port: 5000
-cops_portus_url: "https://github.com/SUSE/Portus.git"
+# cops_portus_url: "https://github.com/SUSE/Portus.git"
+cops_portus_url: "https://github.com/corpusops/Portus.git"
 cops_portus_redis_img: "library/redis:4"
 cops_portus_clair_img: "quay.io/coreos/clair:v2.0.1"
 cops_portus_mysql_img: "library/mariadb:10.0.23"
