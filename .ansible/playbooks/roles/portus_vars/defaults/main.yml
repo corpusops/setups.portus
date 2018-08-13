@@ -1,7 +1,7 @@
 ---
 # cops_portus_version: "5f4caa2"
 cops_portus_version: "master"
-cops_portus_portus_img: "opensuse/portus:head"
+cops_portus_portus_img: "corpusops/portus:head20180813"
 cops_portus_registry_img: "library/registry:2.6"
 cops_portus_db_name: portus_production
 cops_portus_admin_mail: null
