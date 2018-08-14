@@ -1,6 +1,6 @@
 ---
 # APP
-- hosts: "{{portus_servers|default('all')}}"
+- hosts: "{{portus_servers|default('portus_servers')}}"
   roles: [corpusops.roles/ansible_plugins]
   tasks:
   - when: ["cops_portus_lifecycle_app|default(true)"]
