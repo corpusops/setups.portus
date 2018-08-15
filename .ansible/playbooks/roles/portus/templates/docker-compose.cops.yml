@@ -45,8 +45,8 @@ services:
     depends_on: [db]
     links: ["db:db"]
     volumes:
-    - "./../../app:/srv/Portus/app" 
-    - "./../../lib:/srv/Portus/lib" 
+    - "./../../app:/srv/Portus/app"
+    - "./../../lib:/srv/Portus/lib"
     - "{{cops_portus_certs_data}}:/certificates:ro"
     - static:/srv/Portus/public
   background:
@@ -81,8 +81,8 @@ services:
     links: [db]
     volumes:
     - {{cops_portus_certs_data}}:/certificates:ro
-    - "./../../app:/srv/Portus/app" 
-    - "./../../lib:/srv/Portus/lib" 
+    - "./../../app:/srv/Portus/app"
+    - "./../../lib:/srv/Portus/lib"
   db:
     restart: unless-stopped
     image: "{{cops_portus_mysql_img}}"
@@ -170,9 +170,10 @@ services:
   postgres:
     restart: unless-stopped
     image: "{{cops_portus_postgresql_img}}"
-    environment: {POSTGRES_PASSWORD: "{{cops_portus_pg_password}}"}
+    environment:
+      POSTGRES_PASSWORD: "{{cops_portus_pg_password}}"
     volumes:
-    - "{{cops_portus_postgresql_data}}:/var/lib/postgresql"
+    - "{{cops_portus_postgresql_data}}:/var/lib/postgresql/data"
   dbsmartbackup:
     restart: unless-stopped
     image: "corpusops/dbsmartbackup"
