@@ -2,6 +2,7 @@
 version: "2"
 services:
   nginx:
+    extra_hosts: {{cops_portus_extra_hosts|to_json}}
     restart: unless-stopped
     image: "{{cops_portus_nginx_img}}"
     volumes:
@@ -14,6 +15,7 @@ services:
     - "{{cops_portus_nginx_https_port}}:443"
     links: ["registry:registry", "portus:portus"]
   portus:
+    extra_hosts: {{cops_portus_extra_hosts|to_json}}
     restart: unless-stopped
     image: "{{cops_portus_portus_img}}"
     # entrypoint: sh -c "while true;do sleep 65432;done"
@@ -45,11 +47,13 @@ services:
     depends_on: [db]
     links: ["db:db"]
     volumes:
+    - "./../../bin:/srv/Portus/bin"
     - "./../../app:/srv/Portus/app"
     - "./../../lib:/srv/Portus/lib"
     - "{{cops_portus_certs_data}}:/certificates:ro"
     - static:/srv/Portus/public
   background:
+    extra_hosts: {{cops_portus_extra_hosts|to_json}}
     restart: unless-stopped
     image: "{{cops_portus_portus_img}}"
     depends_on: [portus, db]
@@ -74,6 +78,8 @@ services:
     - PORTUS_SECRET_KEY_BASE={{cops_portus_secret_key_base}}
     - PORTUS_PASSWORD={{cops_portus_admin_password}}
     - PORTUS_BACKGROUND=true
+    - PORTUS_BACKGROUND_REGISTRY_ENABLED=true
+    - PORTUS_BACKGROUND_SYNC_ENABLED=true
     - PORTUS_BACKGROUND_SYNC_STRATEGY={{cops_portus_background_sync_strategy}}
     {% for i in cops_portus_extra_conf %}
     - {{i }}
@@ -81,6 +87,7 @@ services:
     links: [db]
     volumes:
     - {{cops_portus_certs_data}}:/certificates:ro
+    - "./../../bin:/srv/Portus/bin"
     - "./../../app:/srv/Portus/app"
     - "./../../lib:/srv/Portus/lib"
   db:
@@ -96,6 +103,7 @@ services:
     volumes:
     - "{{cops_portus_mysql_data}}:/var/lib/mysql"
   registry:
+    extra_hosts: {{cops_portus_extra_hosts|to_json}}
     restart: unless-stopped
     image: "{{cops_portus_registry_img}}"
     environment:
@@ -153,11 +161,13 @@ services:
         && /entrypoint.sh /etc/docker/registry/config.yml
     depends_on: [redisregistry]
   redisregistry:
+    extra_hosts: {{cops_portus_extra_hosts|to_json}}
     image: "{{cops_portus_redis_img}}"
     restart: unless-stopped
     command: >
       --requirepass "{{cops_portus_redis_password}}"
   clair:
+    extra_hosts: {{cops_portus_extra_hosts|to_json}}
     image: "{{cops_portus_clair_img}}"
     restart: unless-stopped
     depends_on: [postgres]

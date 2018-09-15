@@ -1,7 +1,7 @@
 ---
 # cops_portus_version: "5f4caa2"
 cops_portus_version: "master"
-cops_portus_portus_img: "corpusops/portus:head20180813"
+cops_portus_portus_img: "corpusops/portus:head20180924"
 cops_portus_registry_img: "library/registry:2.6"
 cops_portus_db_name: portus_production
 cops_portus_admin_mail: null
@@ -48,7 +48,7 @@ cops_portus_extra_conf:
 #- PORTUS_LDAP_ENCRYPTION_METHOD=start_tls
 #- PORTUS_LDAP_ENCRYPTION_OPTIONS_CA_FILE=/ldap-certificates/ca.pem
 #- PORTUS_LDAP_ENCRYPTION_OPTIONS_SSL_VERSION=TLSv1_2
-cops_portus_background_sync_strategy: update
+cops_portus_background_sync_strategy: update-delete
 cops_portus_composename: portus
 cops_portus_donotlog_options_requests: true
 cops_portus_nginx_force_ssl: true
@@ -103,6 +103,9 @@ cops_portus_email_insecure: "false"
 cops_portus_ssl_cert_basename: "portus"
 cops_portus_ssl_cert_path:     "{{cops_portus_certs_data}}/{{cops_portus_ssl_cert_basename}}.bundle.pem"
 cops_portus_ssl_cert_key_path: "{{cops_portus_certs_data}}/{{cops_portus_ssl_cert_basename}}.key"
+cops_portus_extra_hosts: []
+# cops_portus_extra_hosts:
+# - "{{cops_portus_hostname}}:{{---local_ip_of_loadbalancer---}}"
 cops_portus_ssl_cert: null
 cops_portus_ssl_force: false
 cops_portus_ssl_cert_key: null
