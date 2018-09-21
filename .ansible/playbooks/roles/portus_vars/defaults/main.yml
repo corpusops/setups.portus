@@ -98,6 +98,7 @@ cops_portus_cert_internal_cns: ["portus", "registry"]
 cops_portus_registry_mail_insecure: "false"
 cops_portus_registry_mail_disabled: "true"
 cops_portus_registry_error_log_levels: [panic]
+cops_portus_jwt_expiration_time: 40
 cops_portus_registry_storage_delete_enabled: "true"
 cops_portus_email_insecure: "false"
 cops_portus_ssl_cert_basename: "portus"

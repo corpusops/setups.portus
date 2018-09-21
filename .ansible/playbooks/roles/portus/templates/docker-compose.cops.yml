@@ -39,6 +39,7 @@ services:
     # Since we have no nginx in insecure mode, portus have to
     # serve the static files
     - RAILS_SERVE_STATIC_FILES=true
+    - PORTUS_REGISTRY_JWT_EXPIRATION_TIME_VALUE={{cops_portus_jwt_expiration_time}}
     {% for i in cops_portus_extra_conf %}
     - {{i }}
     {% endfor %}
@@ -81,6 +82,7 @@ services:
     - PORTUS_BACKGROUND_REGISTRY_ENABLED=true
     - PORTUS_BACKGROUND_SYNC_ENABLED=true
     - PORTUS_BACKGROUND_SYNC_STRATEGY={{cops_portus_background_sync_strategy}}
+    - PORTUS_REGISTRY_JWT_EXPIRATION_TIME_VALUE={{cops_portus_jwt_expiration_time}}
     {% for i in cops_portus_extra_conf %}
     - {{i }}
     {% endfor %}
