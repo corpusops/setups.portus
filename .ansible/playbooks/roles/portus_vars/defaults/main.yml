@@ -24,6 +24,7 @@ cops_portus_email_ssl: "false"
 # openssl rand -hex 64
 cops_portus_secret_key_base: ab42ce064bb3fcb33d83343406ec6f8cab3104c58f8fc40d91f73d3f21db896a08cb8fab4367cba87a4c08844ecdbd261421c78234d0a1b4e06e5d028b67bd96
 cops_portus_extra_conf:
+- PORTUS_DELETE_CONTRIBUTORS=true
 - PORTUS_SIGNUP_ENABLED=false
 # always turn on local login
 - "PORTUS_OAUTH_LOCAL_LOGIN_ENABLED=true"
