@@ -178,7 +178,10 @@ services:
     volumes:
     - /tmp:/tmp
     - ./clair/clair.yml:/clair.yml
-    command: [-config, /clair.yml]
+    # deactivated for now
+    # command: [-config, /clair.yml]
+    command: "echo bypassed"
+    entrypoint: "echo bypassed"
   postgres:
     restart: unless-stopped
     image: "{{cops_portus_postgresql_img}}"
