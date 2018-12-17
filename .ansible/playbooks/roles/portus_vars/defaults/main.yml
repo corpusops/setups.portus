@@ -60,7 +60,8 @@ cops_portus_nginx_http_port: 80
 cops_portus_portus_log_level: info
 cops_portus_registry_log_level: error
 cops_portus_nginx_https_port: 443
-cops_portus_clair_port: "6060-6061"
+cops_portus_clair_port: "6060"
+cops_portus_clair_ports: ["{{cops_portus_clair_port}}:6060", "6061:6061"]
 cops_portus_port: 3000
 cops_portus_registry_port: 5000
 # cops_portus_url: "https://github.com/SUSE/Portus.git"

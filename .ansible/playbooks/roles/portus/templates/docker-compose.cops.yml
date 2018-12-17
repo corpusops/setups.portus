@@ -174,7 +174,7 @@ services:
     restart: unless-stopped
     depends_on: [postgres]
     links: [postgres]
-    ports: ["{{cops_portus_clair_port}}:6060-6061"]
+    ports: {{cops_portus_clair_ports|to_json}}
     volumes:
     - /tmp:/tmp
     - ./clair/clair.yml:/clair.yml
