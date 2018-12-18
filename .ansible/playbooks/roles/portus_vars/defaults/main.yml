@@ -2,7 +2,8 @@
 # cops_portus_version: "5f4caa2"
 cops_portus_version: "v2.4"
 # cops_portus_portus_img: "corpusops/portus:head20180924"
-cops_portus_portus_img: "corpusops/portus:2.4.20181119"
+# cops_portus_portus_img: "corpusops/portus:2.4.20181119"
+cops_portus_portus_img: "corpusops/portus:2.4.20181217"
 cops_portus_registry_img: "library/registry:2.6"
 cops_portus_db_name: portus_production
 cops_portus_admin_mail: null
@@ -79,7 +80,7 @@ cops_portus_ct: "{{cops_portus_c}}/examples/compose"
 cops_portus_sshargs: >-
   {% set k = hostvars[inventory_hostname].get(
                 'ansible_ssh_private_key_file', '') %}
-  {% if k%}-o IdentityFile={{k}} -o IdentitiesOnly=yes{%endif%}
+  cops_portus_composename{% if k%}-o IdentityFile={{k}} -o IdentitiesOnly=yes{%endif%}
   {% if (
       hostvars[inventory_hostname].ansible_connection|default('ssh')
      ) not in [ 'smart', 'local'] %}

@@ -180,8 +180,8 @@ services:
     - ./clair/clair.yml:/clair.yml
     # deactivated for now
     # command: [-config, /clair.yml]
-    command: "echo bypassed"
-    entrypoint: "echo bypassed"
+    command:    "sh -c 'while true;do echo bypassed;sleep 65000;done'"
+    entrypoint: "sh -c 'while true;do echo bypassed;sleep 65000;done'"
   postgres:
     restart: unless-stopped
     image: "{{cops_portus_postgresql_img}}"
