@@ -4,7 +4,7 @@ cops_portus_version: "v2.4"
 # cops_portus_portus_img: "corpusops/portus:head20180924"
 # cops_portus_portus_img: "corpusops/portus:2.4.20181119"
 cops_portus_portus_img: "corpusops/portus:2.4.20181217"
-cops_portus_registry_img: "library/registry:2.6"
+cops_portus_registry_img: "library/registry:2.7"
 cops_portus_db_name: portus_production
 cops_portus_admin_mail: null
 cops_portus_db_password: "secret70a0VpwK66n54KB"
@@ -108,6 +108,11 @@ cops_portus_email_insecure: "false"
 cops_portus_ssl_cert_basename: "portus"
 cops_portus_ssl_cert_path:     "{{cops_portus_certs_data}}/{{cops_portus_ssl_cert_basename}}.bundle.pem"
 cops_portus_ssl_cert_key_path: "{{cops_portus_certs_data}}/{{cops_portus_ssl_cert_basename}}.key"
+cops_portus_do_dc: true
+cops_portus_crons:
+  {% if cops_portus_do_dc %}]
+  0 4 * * * {{cops_portus_t}}/gc.sh >/dev/null 2>&1
+  {% endif %}
 cops_portus_extra_hosts: []
 # cops_portus_extra_hosts:
 # - "{{cops_portus_hostname}}:{{---local_ip_of_loadbalancer---}}"

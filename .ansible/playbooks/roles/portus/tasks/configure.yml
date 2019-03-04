@@ -38,6 +38,16 @@
         force: "{{cops_portus_ssl_force}}"
   - include_role: {private: true, name: corpusops.roles/ssl_ca_signed_cert}
 - template:
+    src: "{{item.v.split('/')[-1]}}"
+    dest: "{{cops_portus_t}}/{{item.v}}"
+    mode: "{{item.mode}}"
+    trim_blocks: false
+  with_items:
+  - v: "{{cops_portus_t}}/gc.sh"
+    mode: "0755"
+  - v: "/etc/cron.d/portus-crons"
+    mode: "0644"
+- template:
     src: "{{item}}"
     dest: "{{cops_portus_t}}/{{item}}"
     mode: "0644"
